@@ -1,0 +1,112 @@
+.math-review {
+  --mr-ink: #182438;
+  --mr-navy: #22375c;
+  --mr-pale: #f7f5f0;
+  --mr-border: #c3c9d1;
+  --mr-orange: #a74412;
+  color: var(--mr-ink);
+  background: var(--mr-pale);
+  border: 1px solid var(--mr-border);
+  border-radius: 14px;
+  overflow: hidden;
+  font: 1rem/1.45 system-ui, sans-serif;
+}
+.math-review *, .math-review *::before, .math-review *::after { box-sizing: border-box; }
+.math-review .mr-heading {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px 20px;
+  padding: 18px clamp(12px, 3vw, 24px);
+  color: white;
+  background: var(--mr-navy);
+  border-bottom: 4px solid #e8a66b;
+}
+.math-review .mr-heading h2 { margin: 2px 0; font-size: clamp(1.4rem, 4vw, 2rem); }
+.math-review .mr-heading p { margin: 0; font-size: .95rem; }
+.math-review .mr-brand { color: #ffe5c7; font-weight: 730; letter-spacing: .02em; }
+.math-review .mr-body { padding: 16px clamp(12px, 3vw, 24px) 20px; }
+.math-review h3 { margin: 0 0 10px; }
+.math-review button, .math-review select, .math-review input { font: inherit; }
+.math-review button, .math-review select, .math-review input:not([type="radio"]) {
+  min-height: 42px;
+  border: 1px solid #818ba0;
+  border-radius: 7px;
+  background: #fff;
+  color: var(--mr-ink);
+  padding: 5px 11px;
+}
+.math-review button { font-weight: 680; }
+.math-review button:hover:not(:disabled) { border-color: var(--mr-orange); }
+.math-review :focus-visible { outline: 3px solid #ae4b12; outline-offset: 2px; }
+.math-review .mr-primary { background: var(--mr-navy); color: #fff; border-color: var(--mr-navy); }
+.math-review .mr-scoreboard, .math-review .mr-actions, .math-review .mr-team-fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 10px 0;
+}
+.math-review .mr-team-fields label { flex: 1 1 140px; }
+.math-review .mr-team-fields input { display: block; width: 100%; margin-top: 4px; }
+.math-review .mr-turn-picker { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 7px; margin: 0 0 10px; }
+.math-review .mr-score {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  padding: 6px 9px;
+  background: white;
+  border: 1px solid var(--mr-border);
+  border-radius: 6px;
+  overflow-wrap: anywhere;
+}
+.math-review .mr-score output { font-weight: 770; font-variant-numeric: tabular-nums; }
+.math-review .mr-turn { color: #7b350d; font-size: .85rem; }
+.math-review .mr-board { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
+.math-review .mr-column { display: grid; grid-template-rows: minmax(56px, auto) repeat(3, auto); gap: 7px; }
+.math-review .mr-column h4 {
+  display: grid;
+  place-items: center;
+  margin: 0;
+  padding: 4px;
+  background: var(--mr-navy);
+  color: white;
+  border-radius: 6px;
+  text-align: center;
+  line-height: 1.18;
+}
+.math-review .mr-column button { padding-inline: 3px; min-height: 56px; font-variant-numeric: tabular-nums; }
+.math-review .mr-column button:disabled { color: #576174; background: #e6e9ef; }
+.math-review .mr-played { display: block; font-size: .74rem; font-weight: 550; }
+.math-review .mr-caption { color: #434b5a; margin: 7px 0 12px; font-size: .91rem; }
+.math-review .mr-prompt { font-size: 1.1rem; font-weight: 650; }
+.math-review fieldset { margin: 12px 0; border: 1px solid var(--mr-border); border-radius: 8px; padding: 8px 10px; }
+.math-review legend { padding: 0 5px; font-weight: 680; }
+.math-review .mr-option { display: flex; align-items: start; gap: 8px; min-height: 42px; padding: 7px 2px; }
+.math-review .mr-option input { margin-top: .32em; }
+.math-review .mr-host-choices { padding-left: 1.75em; }
+.math-review .mr-host-choices li + li { margin-top: 5px; }
+.math-review .mr-feedback { padding: 9px 11px; margin: 12px 0; border-left: 4px solid #245842; background: #e8f2eb; }
+.math-review .mr-feedback p { margin: 4px 0; }
+.math-review .mr-award { font-weight: 680; }
+.math-review .mr-figure { margin: 12px 0; padding: 8px 10px; max-width: 490px; background: white; border: 1px solid var(--mr-border); border-radius: 7px; }
+.math-review .mr-figure figcaption { font-weight: 680; }
+.math-review .mr-figure svg { display: block; width: 100%; height: auto; overflow: visible; }
+.math-review .mr-figure svg text { font: 13px system-ui, sans-serif; fill: var(--mr-ink); }
+.math-review .mr-grid-line { stroke: #dfe3e9; stroke-width: 1; }
+.math-review .mr-axes { fill: none; stroke: #495466; stroke-width: 1.3; }
+.math-review .mr-series-0 { color: #243f79; }
+.math-review .mr-series-1 { color: #a74412; }
+.math-review .mr-series polyline { fill: none; stroke: currentColor; stroke-width: 2.6; }
+.math-review .mr-series-1 polyline { stroke-dasharray: 7 4; }
+.math-review .mr-series circle, .math-review .mr-series rect { fill: currentColor; }
+.math-review .mr-legend { display: flex; gap: 12px; }
+.math-review .mr-legend-0 { color: #243f79; }
+.math-review .mr-legend-1 { color: #a74412; }
+.math-review .mr-figure table { width: 100%; border-collapse: collapse; text-align: center; }
+.math-review .mr-figure th, .math-review .mr-figure td { border-bottom: 1px solid var(--mr-border); padding: 4px 6px; }
+@media (max-width: 570px) {
+  .math-review .mr-board { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .math-review .mr-column { grid-template-rows: minmax(46px, auto) repeat(3, auto); }
+}

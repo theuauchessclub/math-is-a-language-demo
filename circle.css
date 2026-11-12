@@ -1,0 +1,96 @@
+.circle-hero {
+  color: var(--paper);
+  background: var(--ink);
+  border-radius: 16px;
+  border-bottom: 5px solid var(--orange);
+  padding: clamp(18px, 4vw, 34px);
+  margin: 0 0 14px;
+}
+.circle-hero .eyebrow { color: #ffb783; }
+.circle-hero p { max-width: 54ch; }
+.circle-form { display: grid; gap: 13px; }
+.circle-block {
+  padding: clamp(14px, 3vw, 24px);
+  margin: 0 0 13px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--paper);
+}
+.circle-form .circle-block { margin: 0; }
+.circle-block > p:first-of-type { color: var(--sub); }
+.circle-section-title { display: flex; align-items: center; gap: 10px; }
+.circle-section-title h2 { margin: 0; }
+.circle-section-title > span {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  flex: 0 0 auto;
+  background: var(--ink);
+  color: var(--paper);
+  font-weight: 800;
+}
+.circle-shout .circle-section-title > span { background: #235341; }
+.circle-poll .circle-section-title > span { background: #803d12; }
+.circle-choices {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+  margin: 10px 0;
+}
+.circle-pick {
+  display: flex;
+  gap: 9px;
+  align-items: center;
+  background: #fff;
+  min-height: 46px;
+  border: 1px solid #a59d8f;
+  border-radius: 8px;
+  padding: 8px 11px;
+  font-weight: 620;
+  text-align: left;
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+.circle-pick > input { accent-color: #803d12; width: 18px; height: 18px; flex: 0 0 auto; }
+.circle-pick:has(:checked),
+.circle-pick[aria-pressed="true"],
+.circle-mood[aria-pressed="true"] {
+  border-color: #803d12;
+  background: #fff0e2;
+  box-shadow: inset 0 0 0 1px #803d12;
+}
+.circle-selection { font-weight: 700; color: #803d12; overflow-wrap: anywhere; }
+.circle-selection:empty { display: none; }
+.circle-field { display: block; margin: 12px 0; font-weight: 700; }
+.circle-field .control { display: block; font-weight: 400; }
+.circle-field .muted { font-weight: 500; }
+.circle-own:not([hidden]) { display: block; margin: 10px 0; }
+.circle-extra { margin-top: 10px; border-top: 1px solid var(--line); padding-top: 5px; }
+.circle-extra summary { cursor: pointer; min-height: 44px; padding-block: 9px; font-weight: 700; }
+.circle-extra summary > span { font-weight: 500; color: var(--sub); }
+.circle-extra audio { max-width: 100%; margin-top: 6px; }
+.circle-moods, .circle-mood-totals { display: flex; flex-wrap: wrap; gap: 7px; padding-bottom: 3px; }
+.circle-mood { font-weight: 650; }
+.circle-fieldset { border: 0; margin: 11px 0 0; padding: 0; min-inline-size: 0; }
+.circle-fieldset legend { padding: 0; font-weight: 740; }
+.circle-fieldset .circle-choices { margin-bottom: 0; }
+.circle-submit { display: flex; flex-wrap: wrap; gap: 3px 11px; align-items: center; }
+.circle-finished { padding: clamp(14px, 3vw, 24px); }
+.circle-quote { font-size: 1.15rem; font-weight: 700; overflow-wrap: anywhere; }
+.circle-results { margin: 12px 0; padding: 0; list-style: none; }
+.circle-result + .circle-result { margin-top: 8px; }
+.circle-result > div { display: flex; flex-wrap: wrap; gap: 3px 11px; justify-content: space-between; }
+.circle-result meter { width: 100%; height: 14px; }
+.circle-badge { display: inline-flex; align-items: center; gap: 5px; border-radius: 7px; background: #eef3f8; padding: 4px 8px; }
+.circle-submissions { display: grid; gap: 9px; margin-top: 8px; }
+.circle-submissions article { border-left: 4px solid var(--accent); background: #f2f5f8; padding: 9px 12px; border-radius: 5px; overflow-wrap: anywhere; }
+.circle-submissions h3, .circle-submissions p { margin: 0 0 5px; }
+.circle-teacher-audio { margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--line); }
+.circle-teacher-audio audio { width: min(100%, 360px); margin-top: 6px; }
+.circle-audio-note { margin-block: 12px; }
+.circle-extra [data-circle-voice-status], .circle-teacher-audio [role="status"] { overflow-wrap: anywhere; }
+@media (max-width: 580px) {
+  .circle-choices { grid-template-columns: 1fr; }
+}
