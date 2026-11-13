@@ -185,6 +185,20 @@
     const lessonTabs = studentCircle && !studentCircle.submission ? "" : model.lesson.sections.map(step=>tab(short[step.id]??step.title,step.id,entries(model.submissions).some(done=>done.sectionId===step.id))).join("");
     return '<nav class="tabs" aria-label="Lesson sections">'+tab("Community Circle","circle",Boolean(studentCircle?.submission))+lessonTabs+'</nav>';
   }
+  function connectedCircleCopy(root) {
+    const replacements = [
+      ["Microphone recording and audio storage are disabled in this public local demo. Use fictional written responses only.", "Microphone recording and audio storage are not enabled. Keep written responses appropriate for your classroom."],
+      ["Your test check-in can be viewed through teacher demo tools in this browser only.", "Your check-in has been saved online for your teacher."],
+      ["Use a fictional positive example, not personal or sensitive information.", "Use a positive classroom example; do not include private personal information."],
+      ["Anyone using this browser can view these test responses in teacher demo tools. Circle is separate from your math grade.", "Your teacher can view your response. Other students cannot read your check-in. Circle is separate from your math grade."]
+    ];
+    for (const paragraph of root.querySelectorAll("p.micro.muted, p.feedback, .circle-shout > p")) {
+      for (const node of paragraph.childNodes) {
+        if (node.nodeType !== 3) continue;
+        for (const [before, after] of replacements) node.textContent = node.textContent.replace(before, after);
+      }
+    }
+  }
   function studentCircleView(message = "") {
     active="circle";
     render(sessionBar()+studentTabs()+'<section data-circle-view></section>');
@@ -200,6 +214,7 @@
       studentCircleView();
       app.querySelector("[data-heading]").focus();
     }});
+    connectedCircleCopy(root);
   }
   async function openStudentCircle(goToOpenerIfDone = false) {
     try {

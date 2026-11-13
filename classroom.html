@@ -10,6 +10,18 @@
   <link rel="stylesheet" href="./pilot.css">
   <link rel="stylesheet" href="./game.css">
   <link rel="stylesheet" href="./circle.css">
+  <style>
+    /* Only the connected notices are compact; keep the lesson workspace full-sized. */
+    body > .app.note { min-height: 0; margin: 10px auto; }
+    #lesson-selector { padding: 10px 12px; }
+    #lesson-selector label { display: flex; align-items: center; gap: 12px; font-weight: 700; }
+    #lesson-selector .control { flex: 1; min-width: 0; margin-top: 0; }
+    #pilot { padding-top: 10px; }
+    @media (max-width: 650px) {
+      #lesson-selector label { display: block; }
+      #lesson-selector .control { margin-top: 6px; }
+    }
+  </style>
   <script src="./game.js" defer></script>
   <script src="./circle.js" defer></script>
   <script type="module" src="./sync-boot.js"></script>

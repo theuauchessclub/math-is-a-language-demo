@@ -3,6 +3,7 @@ const publicKey='sb_publishable_O7o7Mv2Qejck-7FcGkwUUA_VjKzuxYq';
 const api=base+'/functions/v1/classroom-sync';
 const app=document.getElementById('pilot'),notice=document.getElementById('sync-status');
 const stateKey='mial-connected-session-v1';
+const teacherMode=new URLSearchParams(location.search).get('teacher')==='1';
 let lessonId=new URLSearchParams(location.search).get('lesson')||'lesson-3';
 let credentials={},periodId=new URLSearchParams(location.search).get('period')||'period-1';
 const fragment=new URLSearchParams(location.hash.slice(1));
@@ -34,15 +35,15 @@ async function publicRequest(path,body,pid=periodId){
  const x=await response.json();if(!response.ok)throw new Error(x.error||'Sign-in did not complete.');return x;
 }
 function signIn(message=''){
+ if(teacherMode)return teacherSignIn(message);
  app.replaceChildren();notice.textContent=message||'Choose your period, name and student PIN. Your saved work follows you between devices.';
  const section=document.createElement('section');section.className='hero';const h=document.createElement('h1');h.textContent='Student entrance';
  const form=document.createElement('form'),period=document.createElement('select'),student=document.createElement('select'),pin=document.createElement('input');
  period.className=student.className=pin.className='control';period.setAttribute('aria-label','Class period');student.setAttribute('aria-label','Student name');period.required=student.required=true;
  pin.type='password';pin.inputMode='numeric';pin.autocomplete='off';pin.pattern='[0-9]{4}';pin.minLength=4;pin.maxLength=4;pin.required=true;pin.placeholder='Student PIN';pin.setAttribute('aria-label','Student PIN');
  const button=document.createElement('button');button.type='submit';button.className='btn primary';button.textContent='Open my classroom';button.disabled=true;
- const teacher=document.createElement('button');teacher.type='button';teacher.className='btn';teacher.textContent='Teacher entrance';teacher.onclick=teacherSignIn;
  const hint=document.createElement('p');hint.textContent='Use the PIN your teacher assigned. Five incorrect attempts lock your PIN until your teacher resets it.';
- form.append(period,student,pin,button);section.append(h,hint,form,teacher);app.append(section);
+ form.noValidate=true;form.append(period,student,pin,button);section.append(h,hint,form);app.append(section);
  publicRequest('student-directory').then(directory=>{
   if(!section.isConnected)return;
   for(const row of directory.periods){const option=document.createElement('option');option.value=row.id;option.textContent=row.label;period.append(option);}
@@ -50,12 +51,12 @@ function signIn(message=''){
   const fill=()=>{student.replaceChildren();pin.value='';for(const row of directory.students.filter(row=>row.periodId===period.value)){const option=document.createElement('option');option.value=row.id;option.textContent=row.label;student.append(option);}button.disabled=!student.options.length;};
   period.onchange=fill;student.onchange=()=>{pin.value='';};fill();
  }).catch(e=>{if(section.isConnected)notice.textContent=e.message;});
- form.onsubmit=async event=>{event.preventDefault();if(!/^\d{4}$/.test(pin.value)||!student.value)return;const pid=period.value,accountId=student.value;button.disabled=period.disabled=student.disabled=true;try{
+ form.onsubmit=async event=>{event.preventDefault();if(!/^\d{4}$/.test(pin.value)){notice.textContent='Enter your four-digit student PIN.';pin.focus();return;}if(!student.value||!period.value){notice.textContent='Choose your period and name before opening the classroom.';return;}const pid=period.value,accountId=student.value;button.disabled=period.disabled=student.disabled=true;button.textContent='Opening…';notice.textContent='Checking your PIN and opening your classroom…';try{
   const x=await publicRequest('student-pin-login',{accountId,pin:pin.value},pid);pin.value='';periodId=pid;credentials={studentSession:x.token,expiresAt:Date.parse(x.expiresAt),periodId:pid};keep();await start();
- }catch(e){pin.value='';notice.textContent=e.message;button.disabled=period.disabled=student.disabled=false;}};
+ }catch(e){pin.value='';notice.textContent=e.message;button.disabled=period.disabled=student.disabled=false;button.textContent='Open my classroom';}};
 }
-function teacherSignIn(){
- app.replaceChildren();notice.textContent='Enter your teacher PIN.';
+function teacherSignIn(message=''){
+ app.replaceChildren();notice.textContent=message||'Enter your teacher PIN.';
  const section=document.createElement('section');section.className='hero';
  const h=document.createElement('h1');h.textContent='Teacher PIN';
  const form=document.createElement('form'),input=document.createElement('input');
@@ -64,7 +65,7 @@ function teacherSignIn(){
  for(const digit of ['1','2','3','4','5','6','7','8','9','Clear','0','Delete']){const key=document.createElement('button');key.type='button';key.className='btn';key.textContent=digit;key.onclick=()=>{if(digit==='Clear')input.value='';else if(digit==='Delete')input.value=input.value.slice(0,-1);else if(input.value.length<4)input.value+=digit;};grid.append(key);}
  const button=document.createElement('button');button.type='submit';button.className='btn primary';button.textContent='Open teacher dashboard';
  form.onsubmit=async event=>{event.preventDefault();if(!/^\d{4}$/.test(input.value))return;button.disabled=true;try{const response=await fetch(api,{method:'POST',headers:{apikey:publicKey,'Content-Type':'application/json'},body:JSON.stringify({path:'teacher-pin-login',periodId,lessonId,body:{pin:input.value}})});input.value='';const x=await response.json();if(!response.ok)throw new Error(x.error||'Teacher sign-in failed.');credentials={pinToken:x.token,expiresAt:Date.parse(x.expiresAt)};keep();await start();}catch(e){input.value='';notice.textContent=e.message;button.disabled=false;}};
- const back=document.createElement('button');back.type='button';back.className='btn';back.textContent='Student entrance';back.onclick=()=>signIn();form.append(input,grid,button);section.append(h,form,back);app.append(section);
+ form.append(input,grid,button);section.append(h,form);app.append(section);
 }
 function passwordSetup(){
  app.replaceChildren();notice.textContent='Choose your classroom password once. Future sign-ins will not need email.';
@@ -88,7 +89,7 @@ function mountLessonChooser(session){
  if(!lessons.length)return;
  const label=document.createElement('label');label.textContent='Choose lesson ';
  const select=document.createElement('select');select.className='control';select.setAttribute('aria-label','Choose lesson');
- for(const lesson of lessons){const option=document.createElement('option');option.value=lesson.id;option.textContent=lesson.title;select.append(option);}
+ for(const lesson of lessons){const option=document.createElement('option');option.value=lesson.id;option.textContent=({'lesson-3':'U4 L3','lesson-4':'U4 L4','lesson-5':'U4 L5'}[lesson.id]?({'lesson-3':'U4 L3','lesson-4':'U4 L4','lesson-5':'U4 L5'}[lesson.id]+' · '):'')+lesson.title;select.append(option);}
  select.value=lessonId;
  if(!lessons.some(lesson=>lesson.id===lessonId)){notice.textContent='This lesson is not available. Choose an available lesson.';select.value='';}
  select.onchange=()=>{const next=select.value;select.value=lessonId;if(next===lessonId||!lessons.some(lesson=>lesson.id===next))return;if(!confirm('Switch lessons? Save or submit unfinished answers, teacher scores, feedback, or Circle responses before continuing. Saved work will remain.'))return;const target=new URL(location.href);target.searchParams.set('period',periodId);target.searchParams.set('lesson',next);target.hash='';location.assign(target.href);};
@@ -102,7 +103,7 @@ async function start(){
  mountLessonChooser(session);
  window.ClassroomDemo={request,config:session.config,lessonId};
  notice.textContent='Connected. Saved lesson work and submissions sync between devices. Students can use the same classroom link with their period, name and PIN.';
- const exit=document.getElementById('sync-exit');exit.hidden=false;exit.onclick=()=>{sessionStorage.removeItem(stateKey);location.assign(location.pathname);};
+ const exit=document.getElementById('sync-exit');exit.hidden=false;exit.onclick=()=>{sessionStorage.removeItem(stateKey);location.assign(location.pathname+(teacherMode?'?teacher=1':''));};
  if(session.account.role==='teacher'){
   const panel=document.getElementById('student-links');panel.hidden=false;panel.replaceChildren();
   const picker=document.createElement('select');picker.className='control';picker.setAttribute('aria-label','Student for PIN or access-link management');
