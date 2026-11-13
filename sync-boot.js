@@ -18,6 +18,7 @@ async function request(path,body,explicitPeriod){
  if(path!=='teacher-recovery')await refresh();
  const headers={'Content-Type':'application/json',apikey:publicKey};
  if(credentials.studentAccess)headers['x-classroom-access']=credentials.studentAccess;
+ else if(credentials.pinToken)headers['x-teacher-session']=credentials.pinToken;
  else if(credentials.accessToken)headers.Authorization='Bearer '+credentials.accessToken;
  let r;try{r=await fetch(api,{method:'POST',headers,body:JSON.stringify({path,body,periodId:nextPeriod})});}catch{throw new Error('Connection interrupted. No save is confirmed. Keep this page open and check your connection.');}
  const x=await r.json();if(!r.ok){const e=new Error(x.error||'Cloud request failed.');e.status=r.status;throw e;}
@@ -26,20 +27,16 @@ async function request(path,body,explicitPeriod){
  return x;
 }
 function signIn(){
- app.replaceChildren();notice.textContent='Enter your teacher password, or open your personal student link.';
+ app.replaceChildren();notice.textContent='Enter your teacher PIN, or open your personal student link.';
  const section=document.createElement('section');section.className='hero';
- const h=document.createElement('h1');h.textContent='Teacher sign-in';
- const p=document.createElement('p');p.textContent='One password opens your teacher dashboard. Students continue using their personal classroom links.';
- const form=document.createElement('form');
- const password=document.createElement('input');password.type='password';password.autocomplete='current-password';password.placeholder='Teacher password';password.className='control';password.required=true;password.maxLength=128;password.setAttribute('aria-label','Teacher password');
+ const h=document.createElement('h1');h.textContent='Teacher PIN';
+ const form=document.createElement('form'),input=document.createElement('input');
+ input.type='password';input.inputMode='numeric';input.pattern='[0-9]{4}';input.maxLength=4;input.autocomplete='off';input.required=true;input.setAttribute('aria-label','Four-digit teacher PIN');
+ const grid=document.createElement('div');grid.style='display:grid;grid-template-columns:repeat(3,4rem);gap:.5rem';
+ for(const digit of ['1','2','3','4','5','6','7','8','9','Clear','0','Delete']){const key=document.createElement('button');key.type='button';key.className='btn';key.textContent=digit;key.onclick=()=>{if(digit==='Clear')input.value='';else if(digit==='Delete')input.value=input.value.slice(0,-1);else if(input.value.length<4)input.value+=digit;};grid.append(key);}
  const button=document.createElement('button');button.type='submit';button.className='btn primary';button.textContent='Open teacher dashboard';
- form.addEventListener('submit',async event=>{event.preventDefault();if(!password.value)return;button.disabled=true;try{
-  const response=await fetch(api,{method:'POST',headers:{apikey:publicKey,'Content-Type':'application/json'},body:JSON.stringify({path:'teacher-login',periodId,body:{password:password.value}})});
-  const session=await response.json();if(!response.ok)throw new Error(session.error||'Sign-in could not complete.');
-  credentials={accessToken:session.access_token,refreshToken:session.refresh_token,expiresAt:Date.now()+session.expires_in*1000};password.value='';keep();await start();
- }catch(e){password.value='';notice.textContent=e.message||'Sign-in did not complete. Try again when connected.';button.disabled=false;password.focus();}});
- const reset=document.createElement('button');reset.type='button';reset.className='btn';reset.textContent='Set or reset teacher password';reset.onclick=async()=>{if(!confirm('Send one password-setup email to your classroom account? You will choose your password privately on this site.'))return;reset.disabled=true;try{await request('teacher-recovery');notice.textContent='Recovery email requested. Open its newest link to choose your password privately. No password goes in chat.';}catch(e){notice.textContent=e.message;reset.disabled=false;}};
- form.append(password,button);section.append(h,p,form,reset);app.append(section);
+ form.onsubmit=async event=>{event.preventDefault();if(!/^\d{4}$/.test(input.value))return;button.disabled=true;try{const response=await fetch(api,{method:'POST',headers:{apikey:publicKey,'Content-Type':'application/json'},body:JSON.stringify({path:'teacher-pin-login',periodId,body:{pin:input.value}})});input.value='';const x=await response.json();if(!response.ok)throw new Error(x.error||'Teacher sign-in failed.');credentials={pinToken:x.token,expiresAt:Date.parse(x.expiresAt)};keep();await start();}catch(e){input.value='';notice.textContent=e.message;button.disabled=false;}};
+ form.append(input,grid,button);section.append(h,form);app.append(section);
 }
 function passwordSetup(){
  app.replaceChildren();notice.textContent='Choose your classroom password once. Future sign-ins will not need email.';
@@ -58,7 +55,7 @@ function passwordSetup(){
  form.append(one,two,button);section.append(h,p,form,back);app.append(section);
 }
 async function start(){
- if(!credentials.studentAccess&&!credentials.accessToken)return signIn();
+ if(!credentials.studentAccess&&!credentials.accessToken&&!credentials.pinToken)return signIn();
  const session=await request('session');
  if(credentials.recoveryPending)return passwordSetup();
  window.ClassroomDemo={request,config:session.config};

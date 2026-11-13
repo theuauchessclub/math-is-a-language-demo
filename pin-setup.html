@@ -1,0 +1,21 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'none'; form-action 'none'"><title>Private teacher PIN setup</title></head><body><h1>Private teacher PIN setup</h1><p>This page sends nothing over the network. Keep the generated configuration private. Five failed guesses will require owner setup again.</p><form id="setup"><label>Four-digit PIN <input id="pin" type="password" inputmode="numeric" autocomplete="new-password" pattern="[0-9]{4}" required></label><label>Repeat PIN <input id="repeat" type="password" inputmode="numeric" autocomplete="new-password" pattern="[0-9]{4}" required></label><button>Generate private configuration</button></form><p id="message" role="status"></p><textarea id="result" readonly hidden aria-label="Private configuration"></textarea><script>const ITERATIONS=600000;
+const hex=b=>Array.from(new Uint8Array(b),x=>x.toString(16).padStart(2,'0')).join('');
+const bytes=h=>Uint8Array.from(h.match(/../g),x=>parseInt(x,16));
+async function derive(pin,salt){
+ if(!/^\d{4}$/.test(pin)||!/^([a-f0-9]{2}){32}$/.test(salt))throw Error('Invalid PIN configuration');
+ const key=await crypto.subtle.importKey('raw',new TextEncoder().encode(pin),'PBKDF2',false,['deriveBits']);
+ return hex(await crypto.subtle.deriveBits({name:'PBKDF2',hash:'SHA-256',salt:bytes(salt),iterations:ITERATIONS},key,256));
+}
+function validate(cfg){
+ if(!cfg||typeof cfg.verifier!=='string'||typeof cfg.version!=='string'||cfg.iterations!==ITERATIONS||!/^([a-f0-9]{2}){32}$/.test(cfg.verifier)||!/^([a-f0-9]{2}){16}$/.test(cfg.version))throw Error('Invalid PIN configuration');
+ if(typeof cfg.salt!=='string'||!/^([a-f0-9]{2}){32}$/.test(cfg.salt))throw Error('Invalid PIN configuration');
+ return cfg;
+}
+async function verify(pin,cfg){
+ validate(cfg);
+ if(typeof pin!=='string'||!/^\d{4}$/.test(pin))return false;
+ const actual=await derive(pin,cfg.salt);let diff=0;for(let i=0;i<64;i++)diff|=actual.charCodeAt(i)^cfg.verifier.charCodeAt(i);return diff===0;
+}
+
+setup.addEventListener('submit',async e=>{e.preventDefault();const a=pin.value,b=repeat.value;pin.value='';repeat.value='';result.hidden=true;result.value='';if(a!==b||!/^\d{4}$/.test(a)){message.textContent='Enter four digits identically in both fields.';return;}setup.querySelector('button').disabled=true;try{const salt=hex(crypto.getRandomValues(new Uint8Array(32)));const version=hex(crypto.getRandomValues(new Uint8Array(16)));const verifier=await derive(a,salt);result.value=JSON.stringify({version,salt,verifier,iterations:ITERATIONS});result.hidden=false;message.textContent='Paste this private configuration into Supabase Edge Function Secrets as MIAL_TEACHER_PIN_CONFIG. Do not send it in chat. Close this page afterward.';}catch{message.textContent='Could not generate configuration. Nothing was sent.';}finally{setup.querySelector('button').disabled=false;}});
+</script></body></html>
