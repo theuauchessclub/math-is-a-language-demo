@@ -145,6 +145,6 @@ async function start(){
   };
   bulkForm.append(bulk,fileInput,bulkSave);pinForm.append(one,two,generate,hide,save);panel.append(picker,pinHeading,pinHelp,pinForm,bulkHeading,bulkHelp,bulkForm,btn,result,revoke,exportButton);
  }
- await import('./sync-pilot.js');
+ await import('./sync-pilot.js?v=20261113-entry2');
 }
 start().catch(e=>{credentials={};keep();signIn(e.message);});
