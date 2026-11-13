@@ -14,8 +14,11 @@
   let teacherRoster, rosterPeriodFilter = "";
   const periodId = () => preview?.periodId ?? "period-1";
   const periodLabel = () => preview?.periods?.find(period => period.id === periodId())?.label ?? "Selected period";
-  const progressKey = () => "mial-connected-section:" + periodId() + ":" + account.id;
-  const responseKey = () => periodId() + ":" + account?.id + ":" + active;
+  const lessonId = () => window.ClassroomDemo.lessonId || "lesson-3";
+  const lessonLabel = () => lessonId().replace(/^lesson-/, "Lesson ");
+  const legacyProgressKey = () => "mial-connected-section:" + periodId() + ":" + account.id;
+  const progressKey = () => legacyProgressKey() + ":" + lessonId();
+  const responseKey = () => lessonId() + ":" + periodId() + ":" + account?.id + ":" + active;
   const isOperator = () => ["owner-preview", "local-preview"].includes(preview?.mode);
   function clearRoleState() {
     closeCircle?.(); closeCircle = undefined;
@@ -208,7 +211,7 @@
       return studentCircleView("Community Circle is unavailable right now. You can retry or start your math opener.");
     }
     if (goToOpenerIfDone && studentCircle.submission) {
-      try { active=sessionStorage.getItem(progressKey()); } catch {}
+      try { active=sessionStorage.getItem(progressKey()) || (lessonId()==="lesson-3" ? sessionStorage.getItem(legacyProgressKey()) : null); } catch {}
       if(!model.lesson.sections.some(section=>section.id===active))active=model.lesson.sections[0].id;
       return studentView();
     }
@@ -229,7 +232,7 @@
     let busy=false, cleanupGraph=()=>{};
     const next=lesson.sections[lesson.sections.indexOf(section)+1];
     const status=submitted?'<div class="feedback" role="status"><strong>'+e(short[active])+' submitted.</strong> '+e(scoreText(submitted.score))+(submitted.feedback?'<p>'+e(submitted.feedback)+'</p>':'')+'</div>':"";
-    render(sessionBar()+studentTabs()+'<section class="hero lesson-hero"><div class="eyebrow">Unit 4 · Lesson 3</div><h1>'+e(lesson.title)+'</h1><p>Opener → Class Notes → Classwork → Exit Ticket</p></section>'+targets(lesson).replace(' open','')+
+    render(sessionBar()+studentTabs()+'<section class="hero lesson-hero"><div class="eyebrow">'+e(lesson.edition || lessonLabel())+'</div><h1>'+e(lesson.title)+'</h1><p>Opener → Class Notes → Classwork → Exit Ticket</p></section>'+targets(lesson).replace(' open','')+
       '<section data-lesson-flow><h2 tabindex="-1" data-heading>'+e(section.title)+'</h2><p class="pill">'+e(section.standard)+'</p>'+status+
       '<p class="micro muted">One part at a time. Save each response, then submit the section for grading at the end.</p>'+
       '<div class="part-layout"><aside class="shared-reference" aria-label="Shared graph and activity context" data-reference></aside><div class="part-work"><div class="part-progress" role="status" aria-live="polite" data-progress></div><form data-student-form><div data-part></div><div class="part-actions"><button type="button" class="btn" data-previous>Previous</button><button class="btn primary" type="submit" data-next></button></div><p class="micro" role="status" data-save-status></p></form><div data-review-summary></div></div></div>'+
@@ -256,10 +259,12 @@
       if (layout.getBoundingClientRect().top<0 || layout.getBoundingClientRect().top>window.innerHeight/2) layout.scrollIntoView({block:"start",behavior:"instant"});
     }
     function groupFor(item) {
-      if (active==="opener") return {key:"drone",intro:section.intro,items:section.items,graph:lesson.graph,kind:"drone"};
+      if (active==="opener" && lesson.graph && (lesson.graph.kind==="drone" || (lessonId()==="lesson-3" && Array.isArray(lesson.graph.points)))) return {key:"drone",intro:section.intro,items:section.items,graph:lesson.graph,kind:"drone",label:"Shared drone graph"};
       const cape=item.id.startsWith("CAPE-");
       const group=section.items.filter(row=>row.id.startsWith("CAPE-")===cape);
-      const plot=group.find(row=>row.type==="plot");
+      const plots=group.filter(row=>row.type==="plot");
+      if(plots.length>1){const ownPlot=item.type==="plot"?item:undefined;return {key:active+":"+item.id,intro:section.intro,items:[item],plot:ownPlot,graph:ownPlot?.graph,kind:"plot",label:ownPlot?"Graph for "+item.id:"Activity context"};}
+      const plot=plots[0];
       return {key:cape?"cape":active,intro:cape?group[0].intro:section.intro,items:group,plot,graph:plot?.graph,kind:"plot",label:cape?group[0].label:"Activity context"};
     }
     function showPart() {
@@ -272,7 +277,7 @@
         cleanupGraph();
         observers.forEach(observer=>observer.disconnect());observers=[];
         const guideKey=id+":"+group.key;
-        reference.innerHTML='<div class="context-note"><strong>'+e(group.label??"Shared drone graph")+'</strong><p>'+e(group.intro)+'</p></div>'+
+        reference.innerHTML='<div class="context-note"><strong>'+e(group.label??"Activity context")+'</strong><p>'+e(group.intro)+'</p></div>'+
           (group.graph?graphUI(group.graph,group.kind,group.plot?.id):"")+
           (group.plot?'<p class="micro graph-help">'+(graphEditable?'Place points now. Use the coordinate fields for precise or keyboard entry.':'Your graph is shown here for reference. '+(section.items.indexOf(group.plot)<index?'Use Previous to edit ':'Edit it when you reach ')+e(group.plot.id)+'.')+'</p>':"");
         const graph=reference.querySelector("[data-graph]");
@@ -371,7 +376,7 @@
       (number(section.pendingCount) ? '<span class="cell-detail">' + number(section.pendingCount) + ' awaiting review</span>' : '');
   }
   function teacherHero(title, detail) {
-    return '<section class="hero teacher-hero"><div><div class="eyebrow">Teacher tools · Unit 4 · Lesson 3</div><h1 tabindex="-1" data-heading>' + e(title) + '</h1><p>' + e(detail) + '</p><p class="micro muted">' + e(periodLabel()) + ' · Connected student submissions</p></div><div class="teacher-toolbar">' + periodPicker("switch-period") + button("Refresh view", "refresh-teacher") + '</div></section>';
+    return '<section class="hero teacher-hero"><div><div class="eyebrow">Teacher tools · ' + e(lessonLabel()) + '</div><h1 tabindex="-1" data-heading>' + e(title) + '</h1><p>' + e(detail) + '</p><p>' + e(teacher?.lessonTitle || lessonLabel()) + '</p><p class="micro muted">' + e(periodLabel()) + ' · Connected student submissions</p></div><div class="teacher-toolbar">' + periodPicker("switch-period") + button("Refresh view", "refresh-teacher") + '</div></section>';
   }
   function participationView(students) {
     const data = teacher.participation ?? { students:[], categories:[], events:[] };
